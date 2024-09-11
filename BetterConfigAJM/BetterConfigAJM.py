@@ -14,7 +14,7 @@ from typing import List
 # so if TYPE_CHECKING import XXXX won't actually be imported. Having the Logger type hint below
 # in single quotes allows type hinting without importing. This is also good for preventing circular imports
 from logging import Logger
-
+from pathlib import Path
 
 class BetterConfigAJM(configparser.ConfigParser):
     def __init__(self, config_filename, config_dir, config_list_dict: List[dict] = None, logger: Logger = None):
@@ -28,6 +28,25 @@ class BetterConfigAJM(configparser.ConfigParser):
         self.config_filename = config_filename
         self.config_dir = config_dir
         self.config_location = join(config_dir, config_filename).replace('\\', '/')
+
+        if type(self) != BetterConfigAJM:
+            self.post_init()
+
+    def post_init(self):
+        """ TODO: will this work?
+
+        BaseClass Initialization:
+            In the __init__ method of BaseClass, a type check is performed using type(self) is not BaseClass.
+            Conditional Execution:
+            If the instance being created is not of type BaseClass (i.e., it is a subclass), the post_init method is called.
+            post_init is defined as a method that should be implemented by subclasses, throwing a NotImplementedError if it isn't.
+        :return:
+        """
+        if (not hasattr(self, 'config_list_dict')
+                or self.__getattr__(self, 'config_list_dict') is None):
+            self.config_list_dict = self.default_config
+        # making this resolve to an absolute path
+        self.config_location = Path(self.config_location).resolve()
 
     def _read_config(self):
         if isfile(self.config_location):
